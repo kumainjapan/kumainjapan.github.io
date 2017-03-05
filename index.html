@@ -24,11 +24,13 @@
 	
 	<style>
 		#map { 
-			height: 400px; 
+			height: 450px; 
 			width: 100%;
 			padding-bottom: 1.25rem;
 			margin-bottom: 2rem;
-	
+		}
+		#prefecture-detail {
+			font-size: 12px;
 		}
 	</style>
   </head>
@@ -64,11 +66,22 @@
 
     <div class="container">
 
+		<div class="row">
+		
+		<div class="col-sm-3 blog-sidebar">
+          <div class="sidebar-module sidebar-module-inset" style="height: 450px;">
+            <h4 id="prefecture"></h4>
+            <p id="prefecture-detail"></p>
+          </div>
+        </div>
+		
+        <div class="col-sm-8 offset-sm-1 blog-main">
 			<div id="map"></div>
-
-		
+        </div><!-- /.blog-main -->
+      </div><!-- /.row -->
+	  
+	
       <div class="row">
-		
 		<div class="col-sm-3 blog-sidebar">
           <div class="sidebar-module sidebar-module-inset">
             <h4>About</h4>
@@ -160,12 +173,33 @@
 				//north east
 				[46.79, 170.04]
 			], 
+			minZoom: 7,
+			maxZoom: 7,
+			zoomControl:false,
 			attribution: ''
 		})
 		map.setView([36.2813, 137.41455], 7);
+		map.scrollWheelZoom.disable();
 		
+		var clicked_layer = [];
 
-		d3.json('japan.geojson', function(error, json) {
+		d3.queue()
+		.defer(d3.json, 'japan.geojson')
+		.defer(d3.csv, 'japan.csv')
+		.awaitAll(ready);
+		
+		function ready(error, results) {
+			if (error) throw error;
+			init_map(results);
+		}
+		
+		function init_map(results) {
+			var json = results[0];
+			var csv = results[1].reduce(function(arr, item) {
+				arr[item.id] = item; 
+				return arr;
+			}, {});
+			
 			var geojson = L.geoJson(json, {
 				style: {
 					//'color': '#ff7800',
@@ -174,7 +208,7 @@
 				},
 				onEachFeature: function (feature, layer) {
 					layer.on({
-						mouseover: function highlightFeature(e) {
+						mouseover: function (e) {
 							var layer = e.target;
 							layer.setStyle({
 								fillOpacity: 1
@@ -182,14 +216,32 @@
 							if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
 								layer.bringToFront();
 							}
+							//layer.bindTooltip(feature.properties.nam).openTooltip();
+							
+							$('#prefecture').text(feature.properties.nam);
+							
+							$('#prefecture-detail').text(csv[feature.properties.id].desc);
+							
 						},
 						mouseout: function (e) {
-							geojson.resetStyle(e.target);
+							if (!clicked_layer.includes(e.target))
+								geojson.resetStyle(e.target);
 						},
+						click: function (e) {
+							if (!clicked_layer.includes(e.target)) {
+								clicked_layer.push(e.target);
+								e.target.setStyle({ fillOpacity: 1 });
+							} else {
+								clicked_layer.splice( clicked_layer.indexOf(e.target), 1 );
+							}
+						}
 					})
 				}
 			}).addTo(map);
-		});
+		}
+		
+		
+
 		
 	</script>
   </body>
