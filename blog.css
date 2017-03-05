@@ -37,19 +37,35 @@ h6, .h6 {
 /*
  * Masthead for nav
  */
-
 .blog-masthead {
-  margin-bottom: 3rem;
+	
+  margin-bottom: 1rem;
+  background: url('headerbg.png');
+  /*
+  height: 50px;
   background-color: #428bca;
+  */
   -webkit-box-shadow: inset 0 -.1rem .25rem rgba(0,0,0,.1);
           box-shadow: inset 0 -.1rem .25rem rgba(0,0,0,.1);
 }
 
+.home-logo {
+  background-color: #DB626C;
+}
+
+.home-logo a {
+	color: #fff;
+	padding: 0.5rem;
+}
+
+.nav-item {
+	background-color: #DB626C;
+}
 /* Nav links */
 .nav-link {
   position: relative;
-  padding: 1rem;
-  font-weight: 500;
+  padding: 0.9rem;
+  font-size: 12px;
   color: #cdddeb;
 }
 .nav-link:hover,
@@ -81,11 +97,7 @@ h6, .h6 {
  * Blog name and description
  */
 
-.blog-header {
-  padding-bottom: 1.25rem;
-  margin-bottom: 2rem;
-  border-bottom: .05rem solid #eee;
-}
+
 .blog-title {
   margin-bottom: 0;
   font-size: 2rem;

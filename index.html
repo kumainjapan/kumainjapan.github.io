@@ -36,28 +36,36 @@
   <body>
 
     <div class="blog-masthead">
-      <div class="container">
-        <nav class="nav blog-nav">
-          <a class="nav-link active" href="#">Home</a>
-          <a class="nav-link" href="#">New features</a>
-          <a class="nav-link" href="#">Press</a>
-          <a class="nav-link" href="#">New hires</a>
-          <a class="nav-link" href="#">About</a>
+      <div class="container clearfix">
+        <nav>
+          <ul class="nav float-right">
+            <li class="nav-item">
+              <a class="nav-link active" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">New features</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Press</a>
+            </li>
+			<li class="nav-item">
+              <a class="nav-link" href="#">New hires</a>
+            </li>
+			<li class="nav-item">
+              <a class="nav-link" href="#">About</a>
+            </li>
+          </ul>
         </nav>
-      </div>
-    </div>
-
-    <div class="blog-header">
-      <div class="container">
-        <h1 class="blog-title">Kuma in Japan</h1>
-        <img src="beanie.png" height="50"/>
+		<div class="home-logo float-left"> 
+			<a href="#"><img src="logo.png" height="50"/> Kuma in Japan</a>
+		</div>
       </div>
     </div>
 
     <div class="container">
-		<div class="row">
+
 			<div id="map"></div>
-		</div>
+
 		
       <div class="row">
 		
@@ -144,7 +152,7 @@
 		L.Mapzen.apiKey = 'mapzen-V35T5SC';
 		var map = L.Mapzen.map('map', {
 			tangramOptions: {
-				scene: L.Mapzen.BasemapStyles.BubbleWrap
+				scene: L.Mapzen.BasemapStyles.Refill //BubbleWrap
 			},
 			maxBounds: [
 				//south west
