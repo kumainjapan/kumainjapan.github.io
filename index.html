@@ -21,14 +21,17 @@
 	<link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
 	<script src="https://mapzen.com/js/mapzen.min.js"></script>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="https://d3js.org/topojson.v2.min.js"></script>
 	
 	<style>
 		#map { 
-			height: 400px; 
+			height: 450px; 
 			width: 100%;
 			padding-bottom: 1.25rem;
 			margin-bottom: 2rem;
-	
+		}
+		#prefecture-detail {
+
 		}
 	</style>
   </head>
@@ -37,6 +40,7 @@
 
     <div class="blog-masthead">
       <div class="container clearfix">
+		<!-- 
         <nav>
           <ul class="nav float-right">
             <li class="nav-item">
@@ -48,27 +52,33 @@
             <li class="nav-item">
               <a class="nav-link" href="#">Press</a>
             </li>
-			<li class="nav-item">
-              <a class="nav-link" href="#">New hires</a>
-            </li>
-			<li class="nav-item">
-              <a class="nav-link" href="#">About</a>
-            </li>
           </ul>
         </nav>
+		-->
 		<div class="home-logo float-left"> 
-			<a href="#"><img src="logo.png" height="50"/> Kuma in Japan</a>
+			<a href="#"><img src="logo.png"/></a>
 		</div>
       </div>
     </div>
 
     <div class="container">
 
+		<div class="row">
+		
+		<div class="col-sm-3 blog-sidebar">
+          <div class="sidebar-module sidebar-module-inset" style="height: 450px;">
+            <h4 id="prefecture"></h4>
+            <p id="prefecture-detail"></p>
+          </div>
+        </div>
+		
+        <div class="col-sm-9 blog-main">
 			<div id="map"></div>
-
-		
+        </div><!-- /.blog-main -->
+      </div><!-- /.row -->
+	  
+	
       <div class="row">
-		
 		<div class="col-sm-3 blog-sidebar">
           <div class="sidebar-module sidebar-module-inset">
             <h4>About</h4>
@@ -80,29 +90,12 @@
               <li><a href="#">March 2014</a></li>
               <li><a href="#">February 2014</a></li>
               <li><a href="#">January 2014</a></li>
-              <li><a href="#">December 2013</a></li>
-              <li><a href="#">November 2013</a></li>
-              <li><a href="#">October 2013</a></li>
-              <li><a href="#">September 2013</a></li>
-              <li><a href="#">August 2013</a></li>
-              <li><a href="#">July 2013</a></li>
-              <li><a href="#">June 2013</a></li>
-              <li><a href="#">May 2013</a></li>
-              <li><a href="#">April 2013</a></li>
-            </ol>
-          </div>
-          <div class="sidebar-module">
-            <h4>Elsewhere</h4>
-            <ol class="list-unstyled">
-              <li><a href="#">GitHub</a></li>
-              <li><a href="#">Twitter</a></li>
-              <li><a href="#">Facebook</a></li>
             </ol>
           </div>
         </div><!-- /.blog-sidebar -->
 		
 		
-        <div class="col-sm-8 offset-sm-1 blog-main">
+        <div class="col-sm-9 blog-main">
 
           <div class="blog-post">
             <h2 class="blog-post-title">New feature</h2>
@@ -149,6 +142,21 @@
 
 	<script>
 		
+		L.TopoJSON = L.GeoJSON.extend({  
+			addData: function(jsonData) {    
+				if (jsonData.type === "Topology") {
+					for (key in jsonData.objects) {
+						geojson = topojson.feature(jsonData, jsonData.objects[key]);
+						L.GeoJSON.prototype.addData.call(this, geojson);
+					}
+				}    
+				else {
+					L.GeoJSON.prototype.addData.call(this, jsonData);
+				}
+			}  
+		});
+		
+
 		L.Mapzen.apiKey = 'mapzen-V35T5SC';
 		var map = L.Mapzen.map('map', {
 			tangramOptions: {
@@ -160,36 +168,79 @@
 				//north east
 				[46.79, 170.04]
 			], 
+			minZoom: 6,
+			maxZoom: 6,
+			zoomControl:false,
 			attribution: ''
 		})
-		map.setView([36.2813, 137.41455], 7);
+		map.setView([36.2813, 137.41455], 6);
+		map.scrollWheelZoom.disable();
 		
+		var clicked_layer = [];
 
-		d3.json('japan.geojson', function(error, json) {
-			var geojson = L.geoJson(json, {
-				style: {
-					//'color': '#ff7800',
-					'weight': 1,
-					'opacity': 0.8
-				},
-				onEachFeature: function (feature, layer) {
-					layer.on({
-						mouseover: function highlightFeature(e) {
-							var layer = e.target;
-							layer.setStyle({
-								fillOpacity: 1
-							});
-							if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-								layer.bringToFront();
-							}
-						},
-						mouseout: function (e) {
-							geojson.resetStyle(e.target);
-						},
-					})
-				}
-			}).addTo(map);
-		});
+		d3.queue()
+		//.defer(d3.json, 'japan.geojson')
+		.defer(d3.json, 'japan.topojson')
+		.defer(d3.csv, 'japan.csv')
+		.await(ready);
+		
+		function ready(error, topojson, csv_data) {
+			if (error) throw error;
+			init_map(topojson, csv_data);
+		}
+		
+		var layer_config = {
+			style: {
+				'color': '#000',
+				'weight': 1
+				//'opacity': 0.5
+				//'fillOpacity': 0.5
+			},
+			onEachFeature: function (feature, layer) {
+				layer.on({
+					mouseover: function (e) {
+						var layer = e.target;
+						layer.setStyle({
+							'fillOpacity': 0.8
+						});
+						if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+							layer.bringToFront();
+						}
+						//layer.bindTooltip(feature.properties.nam).openTooltip();
+						$('#prefecture').text(feature.properties.nam);
+						$('#prefecture-detail').text(csv[feature.properties.id].desc);
+					},
+					mouseout: function (e) {
+						if (!clicked_layer.includes(e.target))
+							topoLayer.resetStyle(e.target);
+					},
+					click: function (e) {
+						if (!clicked_layer.includes(e.target)) {
+							clicked_layer.push(e.target);
+							e.target.setStyle({ fillOpacity: 1 });
+						} else {
+							clicked_layer.splice( clicked_layer.indexOf(e.target), 1 );
+						}
+					}
+				})
+			}
+		}
+		
+		var csv;
+		var topoLayer; 
+		function init_map(topojson, csv_data) {
+			topoLayer = new L.TopoJSON(null, layer_config);
+			topoLayer.addData(topojson);
+			topoLayer.addTo(map);
+
+			csv = csv_data.reduce(function(arr, item) {
+				arr[item.id] = item; 
+				return arr;
+			}, {});
+								
+			//var geojson = L.geoJson(json, layer_config);
+			//.addTo(map);
+		}
 		
 	</script>
   </body>
